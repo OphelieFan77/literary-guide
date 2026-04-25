@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "literary_guide",
+  "project_id": "31078dda-3d35-4922-af88-31369296b431"
+}
