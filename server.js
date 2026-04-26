@@ -232,5 +232,17 @@ app.get('/api/spotify/search', async (req, res) => {
   res.json(result || {});
 });
 
+app.get('/api/playlists', async (req, res) => {
+  const p = path.join(__dirname, 'cache', 'playlists-manifest.json');
+  if (!existsSync(p)) return res.json({ playlists: [] });
+  res.json(JSON.parse(await readFile(p, 'utf-8')));
+});
+
+app.get('/api/playlists/:id', async (req, res) => {
+  const p = path.join(__dirname, 'cache', 'books', `${req.params.id}.json`);
+  if (!existsSync(p)) return res.status(404).json({ error: 'Not found' });
+  res.json({ tracks: JSON.parse(await readFile(p, 'utf-8')) });
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => console.log(`🎵 Literary Guide running at http://127.0.0.1:${PORT}`));

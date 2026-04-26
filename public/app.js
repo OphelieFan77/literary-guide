@@ -64,8 +64,48 @@ spotifyLoginBtn.addEventListener('click', loginSpotify);
 function switchTab(tab) {
   document.getElementById('tab-book-content').style.display = tab === 'book' ? 'block' : 'none';
   document.getElementById('tab-url-content').style.display = tab === 'url' ? 'block' : 'none';
+  document.getElementById('tab-library-content').style.display = tab === 'library' ? 'block' : 'none';
   document.getElementById('tab-book').classList.toggle('active', tab === 'book');
   document.getElementById('tab-url').classList.toggle('active', tab === 'url');
+  document.getElementById('tab-library').classList.toggle('active', tab === 'library');
+  if (tab === 'library') loadLibrary();
+}
+
+async function loadLibrary() {
+  const grid = document.getElementById('playlist-grid');
+  grid.innerHTML = '<p style="color:#b3b3b3;font-size:0.85em">Loading...</p>';
+  const { playlists } = await fetch('/api/playlists').then(r => r.json());
+  grid.innerHTML = '';
+  if (!playlists.length) {
+    grid.innerHTML = '<p style="color:#b3b3b3;font-size:0.85em">No saved playlists yet. Run the generation script first.</p>';
+    return;
+  }
+  for (const p of playlists) {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#1a1a1a;border-radius:8px;padding:16px;cursor:pointer;transition:background 0.15s';
+    card.onmouseenter = () => card.style.background = '#2a2a2a';
+    card.onmouseleave = () => card.style.background = '#1a1a1a';
+    card.innerHTML = `
+      <div style="color:#fff;font-weight:700;font-size:0.9em;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+      <div style="color:#b3b3b3;font-size:0.75em">${p.trackCount} tracks</div>`;
+    card.onclick = () => loadSavedPlaylist(p.id, p.name);
+    grid.appendChild(card);
+  }
+}
+
+async function loadSavedPlaylist(id, name) {
+  const { tracks: savedTracks } = await fetch(`/api/playlists/${id}`).then(r => r.json());
+  tracks = savedTracks;
+  playlistTitle = name;
+  const titleEl = document.getElementById('playlist-title');
+  if (titleEl) titleEl.textContent = name;
+  renderTracks();
+  if (spotifyToken) {
+    await fetchSpotifyUris();
+    setState('ready');
+  } else {
+    setState('ready_no_auth');
+  }
 }
 window.switchTab = switchTab;
 

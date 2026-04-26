@@ -162,6 +162,7 @@
       <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid #333">
         <button class="tab-btn active" id="tab-book" onclick="switchTab('book')">Upload Book</button>
         <button class="tab-btn" id="tab-url" onclick="switchTab('url')">Murakami Radio</button>
+        <button class="tab-btn" id="tab-library" onclick="switchTab('library')">Library</button>
       </div>
 
       <!-- Book upload -->
@@ -172,6 +173,12 @@
           <button class="btn-green" onclick="document.getElementById('file-input').click()">Choose file</button>
           <input type="file" id="file-input" accept=".pdf,.epub,.txt">
         </div>
+      </div>
+
+      <!-- Library -->
+      <div id="tab-library-content" style="display:none">
+        <p style="color:#b3b3b3;font-size:0.85em;margin-bottom:16px">All Murakami Radio episodes — click to play instantly.</p>
+        <div id="playlist-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px"></div>
       </div>
 
       <!-- URL input -->
