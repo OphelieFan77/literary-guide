@@ -321,7 +321,7 @@ async function fetchSpotifyUris() {
 window.onSpotifyWebPlaybackSDKReady = () => initSpotifySDK();
 
 function initSpotifySDK() {
-  if (!spotifyToken || !window.Spotify) return;
+  if (!spotifyToken || !window.Spotify || player) return;
   player = new Spotify.Player({
     name: 'Literary Guide',
     getOAuthToken: cb => cb(spotifyToken),
