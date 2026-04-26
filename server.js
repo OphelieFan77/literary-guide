@@ -245,4 +245,14 @@ app.get('/api/playlists/:id', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
+app.post('/api/admin/generate', async (req, res) => {                                                                    
+    const { execFile } = await import('child_process');                                                                    
+    const scriptPath = path.join(__dirname, 'scripts', 'generate-all.js');                                                 
+    res.json({ started: true });                                                                                           
+    execFile('node', [scriptPath], { env: process.env }, (err, stdout, stderr) => {                                        
+      if (err) console.error('[generate-all]', err.message);                                                               
+      console.log('[generate-all]', stdout);                                                                               
+      if (stderr) console.error('[generate-all stderr]', stderr);                                                          
+    });                                                                                                                    
+  });
 app.listen(PORT, '0.0.0.0', () => console.log(`🎵 Literary Guide running at http://127.0.0.1:${PORT}`));
