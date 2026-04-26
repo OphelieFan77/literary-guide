@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Literary Guide</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #121212; color: #b3b3b3; font-family: -apple-system, BlinkMacSystemFont, 'Circular', Helvetica, Arial, sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Main content area */
+    .main { flex: 1; padding: 24px 32px 200px; max-width: 900px; margin: 0 auto; width: 100%; }
+
+    h1 { font-size: 2em; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .subtitle { color: #b3b3b3; font-size: 0.85em; margin-bottom: 32px; }
+
+    /* Spotify login */
+    #spotify-login-section {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; gap: 16px;
+    }
+    #spotify-login-section h2 { font-size: 2em; font-weight: 700; color: #fff; }
+    #spotify-login-section p { color: #b3b3b3; margin-bottom: 8px; }
+
+    /* Tabs */
+    .tab-btn { background: none; border: none; color: #b3b3b3; padding: 10px 20px; cursor: pointer; font-size: 0.85em; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tab-btn.active { color: #fff; border-bottom-color: #1DB954; }
+    .tab-btn:hover { color: #fff; }
+
+    /* Upload */
+    #upload-section { display: none; }
+    #drop-zone {
+      border: 1px dashed #535353; border-radius: 8px; padding: 48px 24px;
+      text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    }
+    #drop-zone:hover, #drop-zone.dragover { border-color: #1DB954; background: #1a1a1a; }
+    #drop-zone p { font-size: 0.9em; margin-bottom: 8px; }
+    #file-input { display: none; }
+
+    /* Buttons */
+    .btn-green {
+      background: #1DB954; color: #000; border: none; padding: 12px 32px;
+      border-radius: 500px; font-size: 0.85em; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .btn-green:hover { background: #1ed760; transform: scale(1.02); }
+    .btn-green:disabled { background: #535353; color: #b3b3b3; cursor: not-allowed; transform: none; }
+
+    /* Processing — pixel bar chart style */
+    #processing-section { display: none; padding: 48px 0; text-align: center; }
+    #status-text { color: #b3b3b3; font-size: 0.78em; margin-bottom: 24px; font-family: monospace; letter-spacing: 0.05em; }
+    .pixel-chart { display: inline-flex; align-items: flex-end; gap: 6px; height: 80px; margin-bottom: 12px; }
+    .pixel-col { display: flex; flex-direction: column-reverse; gap: 3px; }
+    .pixel-block {
+      width: 12px; height: 12px; background: #333;
+      transition: background 0.3s ease;
+    }
+    .pixel-block.active { background: #1DB954; }
+    .pixel-block.pulse { background: #fff; animation: pixelpulse 0.5s ease infinite alternate; }
+    @keyframes pixelpulse { from { background: #1DB954; } to { background: #fff; } }
+    .pixel-label { color: #535353; font-size: 0.65em; font-family: monospace; text-align: center; margin-top: 6px; }
+
+    /* Track list */
+    #tracks-section { display: none; }
+    .section-title { font-size: 1.5em; font-weight: 700; color: #fff; margin-bottom: 24px; }
+    #track-list { list-style: none; }
+    #track-list li {
+      padding: 8px 16px; border-radius: 4px; display: flex; align-items: center; gap: 16px;
+      transition: background 0.1s; cursor: default;
+    }
+    #track-list li:hover { background: #2a2a2a; }
+    #track-list li.active { background: #2a2a2a; }
+    #track-list li.active .track-title { color: #1DB954; }
+    .track-num { color: #b3b3b3; font-size: 0.85em; width: 20px; text-align: right; flex-shrink: 0; }
+    .track-num.playing { color: #1DB954; }
+    .track-art { width: 40px; height: 40px; background: #333; border-radius: 4px; flex-shrink: 0; object-fit: cover; }
+    .track-art-placeholder { width: 40px; height: 40px; background: #333; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #535353; font-size: 18px; }
+    .track-info { flex: 1; min-width: 0; }
+    .track-title { color: #fff; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track-artist { color: #b3b3b3; font-size: 0.78em; margin-top: 2px; }
+    .track-mood { color: #535353; font-size: 0.75em; flex-shrink: 0; }
+
+    /* Bottom player bar — Spotify style */
+    #player-bar {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: #181818; border-top: 1px solid #282828;
+      padding: 12px 16px; z-index: 100;
+    }
+    .player-inner { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; gap: 16px; }
+
+    /* Left: current track info */
+    .player-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    #bar-art { width: 56px; height: 56px; background: #333; border-radius: 4px; flex-shrink: 0; object-fit: cover; }
+    #bar-art-placeholder { width: 56px; height: 56px; background: #282828; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #535353; font-size: 24px; }
+    .player-track-info { min-width: 0; }
+    #bar-title { color: #fff; font-size: 0.85em; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #bar-artist { color: #b3b3b3; font-size: 0.75em; margin-top: 2px; }
+    #bar-narration { color: #b3b3b3; font-size: 0.72em; font-style: italic; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+
+    /* Center: controls */
+    .player-center { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .controls { display: flex; align-items: center; gap: 20px; }
+    .ctrl-btn { background: none; border: none; color: #b3b3b3; cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: color 0.1s; }
+    .ctrl-btn:hover { color: #fff; }
+    .ctrl-btn:disabled { color: #535353; cursor: not-allowed; }
+    .ctrl-btn.play-pause {
+      background: #fff; color: #000; width: 48px; height: 48px; border-radius: 50%;
+    }
+    .ctrl-btn.play-pause:hover { background: #f0f0f0; transform: scale(1.04); }
+    .ctrl-btn.play-pause:disabled { background: #535353; color: #b3b3b3; }
+
+    /* Progress bar */
+    .progress-row { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 500px; }
+    .time { color: #b3b3b3; font-size: 0.68em; width: 35px; }
+    .time.right { text-align: right; }
+    .seek-bar { flex: 1; height: 4px; background: #535353; border-radius: 2px; position: relative; cursor: pointer; }
+    .seek-fill { height: 100%; background: #b3b3b3; border-radius: 2px; width: 0%; transition: width 0.5s linear; pointer-events: none; }
+    .seek-bar:hover .seek-fill { background: #1DB954; }
+
+    /* Right */
+    .player-right { display: flex; justify-content: flex-end; align-items: center; }
+    #device-indicator { color: #1DB954; font-size: 0.75em; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap; margin-left: 12px; }
+    #pixel-dancer { display: none; font-size: 22px; animation: dance 0.5s steps(1) infinite; }
+    #pixel-dancer.dancing { display: block; }
+    @keyframes dance {
+      0%   { content: '🕺'; transform: rotate(-10deg) translateY(0px); }
+      25%  { transform: rotate(10deg) translateY(-3px); }
+      50%  { transform: rotate(-10deg) translateY(0px); }
+      75%  { transform: rotate(10deg) translateY(-3px); }
+      100% { transform: rotate(-10deg) translateY(0px); }
+    }
+
+    /* Subtitle overlay */
+    #narration-bar {
+      display: none; position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
+      max-width: 680px; width: 90%; text-align: center;
+      background: rgba(0,0,0,0.75); border-radius: 8px;
+      padding: 12px 24px; z-index: 99;
+      opacity: 0; transition: opacity 0.4s ease;
+    }
+    #narration-bar.visible { opacity: 1; }
+    #narration-ticker {
+      color: #fff; font-size: 0.88em; line-height: 1.6;
+      font-style: italic; letter-spacing: 0.01em;
+    }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <h1 id="main-title" style="display:none">Literary Guide</h1>
+    <p class="subtitle" id="main-subtitle" style="display:none">Upload a book. Listen to its music, in context.</p>
+
+    <div id="spotify-login-section">
+      <h2>Literary Guide</h2>
+      <p>Upload a book. Listen to its music, in context.</p>
+      <button class="btn-green" id="spotify-login-btn">Connect Spotify</button>
+    </div>
+
+    <div id="upload-section">
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid #333">
+        <button class="tab-btn active" id="tab-book" onclick="switchTab('book')">Upload Book</button>
+        <button class="tab-btn" id="tab-url" onclick="switchTab('url')">Murakami Radio</button>
+      </div>
+
+      <!-- Book upload -->
+      <div id="tab-book-content">
+        <div id="drop-zone">
+          <p style="color:#fff;font-weight:600;margin-bottom:4px">Drop a book here</p>
+          <p style="color:#b3b3b3;font-size:0.78em;margin-bottom:20px">.pdf · .epub · .txt</p>
+          <button class="btn-green" onclick="document.getElementById('file-input').click()">Choose file</button>
+          <input type="file" id="file-input" accept=".pdf,.epub,.txt">
+        </div>
+      </div>
+
+      <!-- URL input -->
+      <div id="tab-url-content" style="display:none">
+        <p style="color:#b3b3b3;font-size:0.85em;margin-bottom:16px">Paste a Murakami Radio episode URL — songs and commentary will be extracted and narrated in Chinese in his voice.</p>
+        <div style="display:flex;gap:12px;align-items:center">
+          <input id="url-input" type="url" placeholder="https://www.tfm.co.jp/murakamiradio/report/..."
+            style="flex:1;background:#2a2a2a;border:1px solid #535353;border-radius:4px;padding:12px 16px;color:#fff;font-size:0.85em;outline:none">
+          <button class="btn-green" id="url-submit-btn">Play</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="processing-section">
+      <div class="pixel-chart" id="pixel-chart"></div>
+      <p id="status-text">Processing...</p>
+    </div>
+
+    <div id="tracks-section">
+      <p class="section-title" id="playlist-title">Playlist</p>
+      <ul id="track-list"></ul>
+      <div style="margin-top:24px">
+        <button class="btn-green" id="save-playlist-btn">Save to Spotify</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rolling narration subtitle -->
+  <div id="narration-bar">
+    <span class="narration-ticker" id="narration-ticker"></span>
+  </div>
+
+  <!-- Bottom player bar -->
+  <div id="player-bar">
+    <div class="player-inner">
+      <!-- Left: track info -->
+      <div class="player-left">
+        <div id="bar-art-placeholder">♪</div>
+        <img id="bar-art" style="display:none" alt="">
+        <div class="player-track-info">
+          <div id="bar-title">—</div>
+          <div id="bar-artist"></div>
+          <div id="bar-narration"></div>
+        </div>
+      </div>
+
+      <!-- Center: controls + seek -->
+      <div class="player-center">
+        <div class="controls">
+          <button class="ctrl-btn" id="skip-prev-btn" disabled title="Previous">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+          </button>
+          <button class="ctrl-btn play-pause" id="play-btn" disabled title="Play">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button class="ctrl-btn play-pause" id="pause-btn" disabled title="Pause" style="display:none">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="skip-btn" disabled title="Next">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.9V8.1L8.5 12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+        </div>
+        <div class="progress-row">
+          <span class="time" id="time-cur">0:00</span>
+          <div class="seek-bar"><div class="seek-fill" id="seek-fill"></div></div>
+          <span class="time right" id="time-dur">0:00</span>
+        </div>
+      </div>
+
+      <!-- Right: spotify connect + active device indicator -->
+      <div class="player-right">
+        <button class="btn-green" id="spotify-btn" style="display:none">Connect Spotify</button>
+        <span id="device-indicator" style="display:none"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
