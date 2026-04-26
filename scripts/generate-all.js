@@ -22,8 +22,15 @@ async function discoverUrls() {
   const html = await res.text();
   const base = 'https://www.tfm.co.jp';
   const urls = new Set();
-  for (const m of html.matchAll(/href="(\/murakamiradio\/(?:report\/\d+|index_\d{8}\.html))"/g)) {
-    urls.add(base + m[1]);
+  // New format (episodes 73-86): absolute URL
+  for (const m of html.matchAll(/href="(https:\/\/www\.tfm\.co\.jp\/murakamiradio\/report\/\d+)"/g)) {
+    urls.add(m[1]);
+  }
+  // Old format (episodes 1-72): relative URL — skip for now (different HTML structure)
+  if (process.argv.includes('--include-old')) {
+    for (const m of html.matchAll(/href="(\/murakamiradio\/index_\d{8}\.html)"/g)) {
+      urls.add(base + m[1]);
+    }
   }
   return [...urls];
 }
@@ -65,6 +72,10 @@ async function run() {
           t.narrationUrl = r.url;
         }
         t.spotifyUri = null;
+      }
+      if (translated.length === 0) {
+        console.log(`[skip] 0 tracks extracted — skipping ${url}`);
+        continue;
       }
       await writeFile(cachePath, JSON.stringify(translated));
       manifest.playlists.push({
